@@ -1,0 +1,31 @@
+import random
+
+x = input("How many times you want to play?")
+try:
+    times=int(x)
+    tries= 0
+    number= random.randint(1,25)
+    while times>0:
+        ans=input("Choose a number between 1 and 25: ")
+        answ=int(ans)
+        if answ<number:
+            print("Try again,pick higher")
+            times = times -1
+            tries += 1
+            continue
+        elif answ>number:
+            print("Try again,pick lower")
+            times=times- 1
+            tries += 1
+            continue
+        elif answ == number:
+            print("You won!")
+            tries += 1
+            print("It took you %s guesses" % tries)
+            break
+        else:
+            pass
+    if times ==0:    
+        print("You ran out of attempts")
+except ValueError as e:
+    print("You didn't input a number, try again.")
