@@ -1,0 +1,186 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[35]:
+
+
+from sklearn import datasets
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from sklearn.ensemble import RandomForestRegressor
+
+
+
+DecisionTree_model = DecisionTreeRegressor()
+
+adp = pd.read_csv('final_test.csv')
+adp.dropna(subset=["age"],inplace=True)
+adp.dropna(subset=["height"],inplace=True)
+
+Y= adp['size']
+X= adp.drop(columns = ['size'])
+
+        
+#We convert the data of size to a categorical type
+y = []
+for row in Y:
+    if row == 'XXS':
+        y.append(0)
+    elif row == "S":
+        y.append(1)
+    elif row == 'M':
+        y.append(2)
+    elif row == 'L':
+        y.append(3)
+    elif row == 'XL':
+        y.append(4)
+    elif row == 'XXL':
+        y.append(5)
+    elif row == 'XXXL':
+        y.append(6)
+    else:
+        y.append(7)
+
+X = np.array(X)
+y = np.array(y)
+y = y.reshape(-1,1)
+
+scaler_x = StandardScaler()
+X = scaler_x.fit_transform(X)
+
+scaler_y = StandardScaler()
+y = scaler_y.fit_transform(y)
+
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.10,random_state=0)  
+
+DecisionTree_model.fit(X_train, y_train)
+
+accuracy_DecisionTree = DecisionTree_model.score(X_test,y_test)
+print(accuracy_DecisionTree)
+
+
+# In[36]:
+
+
+RandomForest_model = RandomForestRegressor(n_estimators=10, max_depth=10)
+RandomForest_model.fit(X_train,y_train)
+
+
+# In[37]:
+
+
+accuracy_RandomForest = RandomForest_model.score(X_test,y_test)
+print("Model Accuracy: ",accuracy_RandomForest)
+
+#Extract single tree
+estimator = RandomForest_model.estimators_[1] #Chooses the first random forest
+#Creates a list to calculate the STD of each tree in the model
+treeSTD = np.std([tree.feature_importances_ for tree in RandomForest_model.estimators_], axis = 0)
+#if you print it you can the STD for each column
+#the importances reffers to which variable is most important to take desitions
+importances = RandomForest_model.feature_importances_
+#Buils indices to point to the features
+indices = np.argsort(importances)[::-1]
+#calculates the number of features
+totalFeatures = len(X[0])
+feature_labels =list(adp.columns[0:8])
+
+#Visualize this graph
+
+#print the feature ranking
+print("")
+print("Features ranking:")
+
+for f in range(totalFeatures):
+    print("%d. Feature %d - %s (%f)" % (f+1, indices[f],feature_labels[indices[f]], importances[indices[f]]))
+
+    
+plt.figure()
+plt.title("Feature importances")
+plt.bar(range(totalFeatures), importances[indices],
+        color='r', yerr=treeSTD[indices], align = "center")
+plt.xticks(range(totalFeatures), indices)
+plt.show()
+
+
+# In[38]:
+
+
+predictions = RandomForest_model.predict(X_test)
+
+x_axis = []
+for row in X_test:    
+    x_axis.append(row[0])
+    
+x2_axis = []
+for row in X_test:    
+    x2_axis.append(row[1])
+
+x3_axis = []
+for row in X_test:    
+    x3_axis.append(row[2])
+    
+
+
+# Build scatterplot
+
+plt.scatter(x_axis, y_test, c = 'b', alpha = 0.5, marker = '.', label = 'Real')
+plt.scatter(x_axis, predictions, c = 'r', alpha = 0.5, marker = '.', label = 'Predicted')
+plt.xlabel('Weight')
+plt.ylabel('Size')
+plt.grid(color = '#D3D3D3', linestyle = 'solid')
+plt.legend(loc = 'lower right')
+plt.show()
+
+
+# In[39]:
+
+
+plt.scatter(x2_axis, y_test, c = 'b', alpha = 0.5, marker = '.', label = 'Real')
+plt.scatter(x2_axis, predictions, c = 'r', alpha = 0.5, marker = '.', label = 'Predicted')
+plt.xlabel('Age')
+plt.ylabel('Size')
+plt.grid(color = '#D3D3D3', linestyle = 'solid')
+plt.legend(loc = 'lower right')
+plt.show()
+
+
+# In[40]:
+
+
+plt.scatter(x3_axis, y_test, c = 'b', alpha = 0.5, marker = '.', label = 'Real')
+plt.scatter(x3_axis, predictions, c = 'r', alpha = 0.5, marker = '.', label = 'Predicted')
+plt.xlabel('Height')
+plt.ylabel('Size')
+plt.grid(color = '#D3D3D3', linestyle = 'solid')
+plt.legend(loc = 'lower right')
+
+
+plt.show()
+
+
+# In[41]:
+
+
+from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
+
+# Mean absolute error (MAE)
+mae = mean_absolute_error(y_test, predictions)
+
+# Mean squared error (MSE)
+mse = mean_squared_error(y_test, predictions)
+
+# R-squared scores
+r2 = r2_score(y_test, predictions)
+
+# Print metrics
+print('Mean Absolute Error:', round(mae, 2))
+print('Mean Squared Error:', round(mse, 2))
+print('R-squared scores:', round(r2, 2))
+
