@@ -1,0 +1,42 @@
+
+#Ploting variables
+plot(longley$Employed,longley$GNP.deflator)
+plot(longley$Employed,longley$GNP)
+plot(longley$Employed,longley$Unemployed)
+plot(longley$Employed,longley$Armed.Forces)
+plot(longley$Employed,longley$Population)
+plot(longley$Employed,longley$Year)
+
+#I'll use GNP, Population & year as they show nice correlation with employed
+data <- as.data.frame(cbind(longley$Employed,longley$GNP,longley$Population,longley$Year))
+
+mod1 <- lm(data$V1 ~ data$V2, data = longley)
+plot(x = longley$GNP, y = longley$Employed, xlim = c(0,600), col = 'blue')
+points(x = longley$GNP, y = mod1$fitted.values, col= 'red')
+
+mod2 <- lm(data$V1 ~ data$V3, data = longley)
+plot(x = longley$Population, y = longley$Employed, xlim = c(0,600), col = 'blue')
+points(x = longley$Population, y = mod2$fitted.values, col= 'red')
+
+mod3 <- lm(data$V1 ~ data$V4, data = longley)
+plot(x = longley$Year, y = longley$Employed, col = 'blue')
+points(x = longley$Year, y = mod3$fitted.values, col= 'red')
+
+#Model3  is choosed as the best model
+
+y <- as.matrix(longley$Employed)
+x <- as.matrix(cbind(rep(1,length(longley$Employed)),longley[,c('Year')]))
+
+#calculate beta vector
+beta <- solve(t(x) %*% x) %*% t(x) %*% y
+beta
+#beta values B0= -1335.10, B1 = 0.7165118
+
+#Calculate predicted values
+library(tidyverse)
+inputs <- longley[,c('Employed','Year')]
+pred <- inputs %>%
+  mutate(Intercept = beta[1],
+         Employed.pred = Intercept +beta[2]*Year)
+
+plot(longley$Employed, pred$Employed.pred)
